@@ -1,4 +1,6 @@
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main {
     public static void main(String[] args) throws ProductNotFoundException {
@@ -9,6 +11,8 @@ public class Main {
         productService.addProduct(new Product(3L,"Laptop Lenovo",150));
 
         Scanner scanner = new Scanner(System.in);
+
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
 
         while(true) {
             System.out.println("1. Add product");
@@ -42,13 +46,25 @@ public class Main {
                     break;
                 case 2:
                     System.out.println("Danh sach cac san pham ");
-                    productService.getAllProduct().forEach(System.out::println);
+                    sleep(3000);
+                    executorService.execute(() -> {
+
+                        productService.getAllProduct().forEach(System.out::println);
+                    });
                     break;
                 case 3:
                     System.out.print("Nhập tên sản phẩm cần tìm: ");
                     String searchName = scanner.nextLine();
-                    Product product = productService.getProductByName(searchName);
-                    System.out.println("Sản phẩm tìm thấy: " + product);
+                    sleep(2000);
+                    executorService.execute(() -> {
+
+                        try {
+                          Product product = productService.getProductByName(searchName);
+                            System.out.println("Sản phẩm tìm thấy: " + product);
+                        } catch (ProductNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
                     break;
                 case 4:
                     try {
@@ -71,5 +87,12 @@ public class Main {
         }
 
 
+    }
+    private static void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
